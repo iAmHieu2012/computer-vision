@@ -1,0 +1,14 @@
+\begin{thebibliography}{1}
+
+\bibitem{gonzalez_woods_2018}
+Rafael~C. Gonzalez and Richard~E. Woods.
+\newblock {\em Digital Image Processing}.
+\newblock Pearson, New York, NY, 4th edition, 2018.
+
+\bibitem{opencvOpenCVImage}
+Ana Huamán.
+\newblock {O}pen{C}{V}: {H}arris corner detector --- docs.opencv.org.
+\newblock \url{https://docs.opencv.org/4.x/d4/d7d/tutorial\_harris\_detector.html}.
+\newblock [Accessed 02-04-2026].
+
+\end{thebibliography}

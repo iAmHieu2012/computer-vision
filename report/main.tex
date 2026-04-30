@@ -1,0 +1,65 @@
+\documentclass[12pt]{article}
+
+\usepackage{hcmus-report-template}
+
+% Disable indentation on new paragraphs
+\setlength{\parindent}{0pt}
+
+% Line spacing 1.5
+\renewcommand{\baselinestretch}{1.5}
+
+% Optional: graphic path
+% \graphicspath{PATH_TO_GRAPHIC_FOLDER}
+
+% To use Times font family, uncomment this row
+% \usepackage{mathptmx}
+
+% To use roman section / subsection, uncomment these rows
+% \renewcommand{\thesection}{\Roman{section}}
+% \renewcommand{\thesubsection}{\thesection.\Roman{subsection}}
+
+% Define course name, report name and report title.
+\newcommand{\coursename}{Thị giác máy tính}
+\newcommand{\reportname}{Cài đăt Harris Corner Detection}
+\newcommand{\reporttitle}{Báo cáo thực hành cá nhân 2}
+
+\newcommand{\studentname}{Võ Ngọc Hiếu (23122027)}
+\newcommand{\teachername}{TS. Võ Hoài Việt \\ ThS. Phạm Minh Hoàng}
+
+% Header
+\lhead{\reporttitle}
+\rhead{
+Trường Đại học Khoa học Tự nhiên - ĐHQG HCM\\
+\coursename
+}
+
+% Footer
+\newcommand{\leftfooter}{\LaTeX\ by \href{https://github.com/iAmHieu2012}{Võ Ngọc Hiếu}}
+\lfoot{\leftfooter}
+
+% ============ DOCUMENT ============
+\begin{document}
+\pagenumbering{roman}
+\input{content/title.tex}
+
+\tableofcontents
+\pagebreak
+% \listoftables
+% \pagebreak
+\listoffigures
+\pagebreak
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\input{content/content.tex}
+
+% References
+\nocite{*}
+\input{content/ref.tex}
+
+% Appendix
+% \appendix
+% Add \cleardoublepage to move appendices to next page.
+% \input{appendix/appendix.tex}
+\end{document}

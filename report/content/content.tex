@@ -1,0 +1,206 @@
+\section{Giới thiệu}
+
+Báo cáo này trình bày về quá trình cài đặt thuật toán Harris Corner Detection thủ công cũng như các phương pháp tối ưu hóa tốc độ thực thi của thuật toán.
+
+\begin{itemize}
+    \item Ngôn ngữ lập trình: \textbf{C/C++} kết hợp với thư viện \textbf{OpenCV}.
+    \item Môi trường: \textbf{Arch Linux}.
+    \item Công cụ: \textbf{Visual Studio Code}.
+\end{itemize}
+
+Đồ án tuân thủ yêu cầu không sử dụng các hàm xử lý ảnh có sẵn của thư viện OpenCV (như \texttt{cv::cornerHarris}, \texttt{cv::Sobel}, \texttt{cv::GaussianBlur}). Toàn bộ logic thuật toán được lập trình thủ công thông qua việc thao tác trực tiếp trên con trỏ pixel (\texttt{uchar*}, \texttt{float*}) và sử dụng số học con trỏ; chỉ sử dụng các hàm I/O và trực quan hóa cơ bản (\texttt{cv::imread}, \texttt{cv::imwrite}, \texttt{cv::imshow}, \texttt{cv::circle}).
+
+\section{Cấu trúc thư mục}
+\vspace{0.5cm}
+\dirtree{%
+.1 /.
+.2 .vscode.
+.3 c\_cpp\_properties.json.
+.3 launch.json.
+.3 tasks.json.
+.2 bin.
+.3 23122027.
+.2 build.
+.2 images.
+.3 input.
+.4 test.jpg.
+.3 output.
+.2 include.
+.3 imgUtils.hpp.
+.3 libs.hpp.
+.2 Makefile.
+.2 run.sh.
+.2 src.
+.3 imgUtils.cpp.
+.3 main.cpp.
+}
+
+\section{Hướng dẫn cài đặt và sử dụng}
+
+\subsection{Yêu cầu hệ thống và Cài đặt}
+Để biên dịch và chạy chương trình trên môi trường Arch Linux, ta cần cài đặt các công cụ phát triển cơ bản và thư viện tương ứng.
+
+\begin{enumerate}
+    \item \textbf{Cập nhật hệ thống và cài đặt các gói cần thiết:}
+    Mở terminal và chạy lệnh sau để cài đặt trình biên dịch (\texttt{gcc}, \texttt{g++}), trình gỡ lỗi (\texttt{gdb}), công cụ build (\texttt{make}), công cụ quản lý thư viện (\texttt{pkgconf}), và thư viện \texttt{opencv}:
+    \begin{lstlisting}[language=bash, frame=single]
+sudo pacman -Syu
+sudo pacman -S base-devel gdb pkgconf opencv
+    \end{lstlisting}
+
+    \item \textbf{Biên dịch chương trình:}
+    Di chuyển terminal vào thư mục gốc của đồ án (nơi chứa file \texttt{Makefile}) và thực thi lệnh \texttt{make}:
+    \begin{lstlisting}[language=bash, frame=single]
+make
+    \end{lstlisting}
+    Quá trình này sẽ sử dụng \texttt{g++} cùng cấu hình từ \texttt{pkg-config opencv4} để biên dịch mã nguồn trong thư mục \texttt{src/} và tạo ra file thực thi \texttt{23122027} nằm trong thư mục \texttt{bin/}.
+    \item \textbf{Chạy chương trình thủ công:} Sẽ được đề cập ở phần mục sau.
+    \item \textbf{Chạy chương trình tự động:}
+    Kịch bản \texttt{run.sh} đã được chuẩn bị sẵn để chạy thử nghiệm tất cả các tính năng của đồ án. Trước khi chạy, đảm bảo bạn đã tạo thư mục \texttt{images/input/} và đưa một bức ảnh mẫu có tên \texttt{test.jpg} vào đó.
+    
+    Sau đó, cấp quyền thực thi và chạy script:
+    \begin{lstlisting}[language=bash, frame=single]
+chmod +x run.sh
+./run.sh
+    \end{lstlisting}
+    Script sẽ tuần tự gọi file thực thi để thực hiện các tác vụ xử lí ảnh và tự động lưu ảnh kết quả vào thư mục \texttt{images/output/}.
+\end{enumerate}
+
+\subsection{Cấu hình môi trường Visual Studio Code}
+Để thuận tiện cho việc phát triển và gỡ lỗi mã nguồn C++, đồ án đã được cấu hình sẵn cho trình soạn thảo Visual Studio Code thông qua các file trong thư mục \texttt{.vscode}:
+
+\begin{itemize}
+    \item \textbf{Cấu hình IntelliSense (\texttt{c\_cpp\_properties.json}):} 
+    File này khai báo chuẩn ngôn ngữ \texttt{gnu++17} và cung cấp đường dẫn đến thư viện OpenCV (\texttt{/usr/include/opencv4}). Điều này giúp VS Code nhận diện đúng các hàm của OpenCV, hỗ trợ lập trình trên môi trường Linux.
+    
+    \item \textbf{Tác vụ biên dịch (\texttt{tasks.json}):} 
+    Định nghĩa một tác vụ mang tên \texttt{build with make}. Tác vụ này tự động thực thi lệnh \texttt{make} đã được định nghĩa trong \texttt{Makefile}, giúp quá trình biên dịch (build) dự án diễn ra tự động hóa chỉ với một phím tắt.
+    
+    \item \textbf{Cấu hình gỡ lỗi (\texttt{launch.json}):} 
+    Sử dụng trình gỡ lỗi \texttt{gdb} của hệ thống. Cấu hình được thiết lập để tự động gọi tác vụ biên dịch trước (\texttt{preLaunchTask}), sau đó khởi chạy file thực thi \texttt{23122027} với các đối số dòng lệnh mẫu. Thiết lập này cho phép đặt breakpoint và theo dõi giá trị biến một cách trực quan trong quá trình chạy thử nghiệm.
+\end{itemize}
+
+\subsection{Chạy chương trình thủ công}
+Chương trình yêu cầu truyền tham số qua dòng lệnh để thực thi các phiên bản thuật toán khác nhau.
+
+\textbf{Chạy thuật toán Harris cơ bản:}
+\begin{lstlisting}[language=bash, frame=single]
+./bin/23122027 -harris <InputFilePath> <OutputFilePath>
+\end{lstlisting}
+
+\textbf{Chạy thuật toán Harris tối ưu hóa tốc độ:}
+\begin{lstlisting}[language=bash, frame=single]
+./bin/23122027 -optHarris <InputFilePath> <OutputFilePath>
+\end{lstlisting}
+
+\section{Cơ sở lý thuyết của các thuật toán Harris Corner Detection}
+
+Ta sẽ sử dụng ảnh sau như một ví dụ minh hoạ cho các thao tác xử lí ảnh:
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{img/test.jpg}
+    \caption{Ảnh ví dụ (Nguồn: \url{wikipedia.org})}
+\end{figure}
+
+\subsection{Phép tích chập 2 chiều và Xử lý biên}
+
+Phép tích chập (Convolution) là nền tảng của các bộ lọc không gian. Quá trình này sử dụng một kernel $K$ kích thước $k \times k$ trượt dọc theo ảnh gốc $I$. Tại vùng biên, chương trình sử dụng kỹ thuật \textbf{Replicate Padding} (lặp lại viền ảnh) — pixel nằm ngoài biên được thay thế bằng giá trị pixel biên gần nhất. Công thức tích chập tại tọa độ $(x,y)$ với bán kính $pad = \lfloor k/2 \rfloor$:
+$$S(x, y) = \sum_{i=-pad}^{pad} \sum_{j=-pad}^{pad} I(x+i, y+j) \cdot K(-i, -j)$$
+
+\subsection{Cơ sở toán học của Thuật toán Harris Corner}
+
+Thuật toán Harris dựa trên việc quan sát sự thay đổi cường độ sáng của một cửa sổ nhỏ khi dịch chuyển theo mọi hướng. Hàm năng lượng (sự thay đổi cường độ) khi dịch chuyển cửa sổ một khoảng $(u, v)$ được định nghĩa là:
+$$E(u, v) = \sum_{x, y} w(x, y) [I(x+u, y+v) - I(x, y)]^2$$
+Trong đó, $w(x, y)$ là hàm cửa sổ trọng số (trong đồ án này là Gaussian), $I$ là cường độ sáng.
+
+Áp dụng khai triển Taylor bậc nhất cho $I(x+u, y+v)$:
+$$I(x+u, y+v) \approx I(x, y) + I_x u + I_y v$$
+Với $I_x, I_y$ là đạo hàm theo hướng X và Y (tính bằng kernel Sobel). Thay vào hàm năng lượng, ta có dạng ma trận:
+$$E(u, v) \approx \begin{bmatrix} u & v \end{bmatrix} M \begin{bmatrix} u \\ v \end{bmatrix}$$
+
+Trong đó, $M$ là \textbf{Ma trận cấu trúc (Structure Tensor)}:
+$$M = \sum_{x, y} w(x, y) \begin{bmatrix} I_x^2 & I_x I_y \\ I_x I_y & I_y^2 \end{bmatrix} = \begin{bmatrix} S_{xx} & S_{xy} \\ S_{xy} & S_{yy} \end{bmatrix}$$
+
+Hàm cửa sổ $w(x,y)$ ở đây là bộ lọc \textbf{Gaussian 2D}, được định nghĩa:
+$$G_{2D}(x, y) = \frac{1}{2\pi\sigma^2} \exp\!\left(-\frac{x^2 + y^2}{2\sigma^2}\right)$$
+Bộ lọc này đảm bảo các pixel gần tâm cửa sổ đóng góp trọng số lớn hơn các pixel ở rìa, giúp ước lượng ma trận cấu trúc $M$ mượt mà và bền vững hơn trước nhiễu. Các thành phần $S_{xx}, S_{yy}, S_{xy}$ chính là kết quả của việc làm trơn các ma trận bình phương đạo hàm bằng $G_{2D}$.
+
+Để phân loại điểm đó có phải là góc hay không mà không cần tính trực tiếp trị riêng $\lambda_1, \lambda_2$ của ma trận $M$, Harris và Stephens đề xuất độ đo hàm phản hồi $R$:
+$$R = \det(M) - k \cdot (\text{trace}(M))^2$$
+Với $\det(M) = S_{xx}S_{yy} - S_{xy}^2$, $\text{trace}(M) = S_{xx} + S_{yy}$ và hằng số thực nghiệm $k = 0.04$.
+Nếu $R$ lớn và dương ($\lambda_1$ và $\lambda_2$ đều lớn), điểm đó là một góc.
+
+Cuối cùng, thuật toán áp dụng kỹ thuật \textbf{Non-Maximum Suppression (NMS)} để loại bỏ các điểm phản hồi yếu và gom cụm. Về cơ chế: vì một góc thực tế trong ảnh thường kích hoạt một \textit{vùng} rộng gồm nhiều pixel liền kề cùng có $R$ cao, NMS chỉ giữ lại đỉnh cục bộ cao nhất và loại toàn bộ các điểm lân cận yếu hơn. Cụ thể, với mỗi pixel $(x, y)$: nếu $R(x,y)$ vượt ngưỡng $0.01 \cdot R_{\max}$ \textit{và} là giá trị lớn nhất trong vùng lân cận $3 \times 3$ xung quanh nó, pixel đó mới được công nhận là một góc thực sự:
+$$R(x, y) > 0.01 \cdot R_{\max} \quad \text{và} \quad R(x, y) = \max_{(i,j)\,\in\,\mathcal{N}_{3\times3}(x,y)} R(i, j)$$
+
+\textbf{Ví dụ minh họa kết quả thuật toán Harris:}
+\begin{figure}[h!]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/test.jpg}
+        \centerline{(a) Ảnh gốc}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/harris_basic.jpg}
+        \centerline{(b) Điểm góc phát hiện được}
+    \end{minipage}
+    \caption{Phát hiện góc với thuật toán Harris cơ bản}
+\end{figure}
+
+\subsection{Các phương pháp Tối ưu hóa Thuật toán}
+
+Thuật toán cơ bản dù chính xác nhưng tiêu tốn rất nhiều chu kỳ xung nhịp CPU do thực hiện tính toán độ phức tạp cao trên từng pixel. Hàm \texttt{optHarris} áp dụng các kỹ thuật sau để tăng tốc:
+
+\subsubsection{Integer Arithmetic và Gộp chuyển xám:}
+Thay vì tính toán cường độ xám bằng số phẩy động (float), phương trình xám được nhân với 1000 để sử dụng toàn bộ toán tử nguyên:
+$$Y = \frac{R \times 299 + G \times 587 + B \times 114}{1000}$$
+Toán tử nguyên trên ALU của CPU thực thi nhanh hơn nhiều so với FPU (đơn vị dấu phẩy động).
+
+\subsubsection{Gộp vòng lặp giảm I/O bộ nhớ:}
+Việc tính đạo hàm Sobel X, Y và Tensor $I_{xx}, I_{yy}, I_{xy}$ yêu cầu phải duyệt qua ma trận ảnh nhiều lần, gây ra hiện tượng cache miss và nghẽn băng thông RAM. Phiên bản tối ưu tính trực tiếp xấp xỉ đạo hàm và bình phương ngay trong một vòng lặp duyệt ảnh duy nhất, giữ dữ liệu nằm trên L1/L2 Cache lâu hơn.
+
+\subsubsection{Gaussian phân tách 1D (Separable Gaussian Filter):}
+Hàm Gaussian 2D $G_{2D}(x, y)$ có \textbf{tính chất tách được tuyến tính}:
+$$G_{2D}(x, y) = G_{1D}(x) \cdot G_{1D}(y), \quad \text{với } G_{1D}(t) = \frac{1}{\sqrt{2\pi}\,\sigma}\exp\!\left(-\frac{t^2}{2\sigma^2}\right)$$
+Nhờ đó, thay vì tích chập trực tiếp với kernel 2D kích thước $k \times k$ (đòi hỏi $O(k^2)$ phép nhân cho mỗi pixel), thuật toán tách thành 2 bước tích chập với kernel 1D kích thước $k$:
+\begin{itemize}
+    \item \textbf{Quét ngang:} Tích chập từng hàng ảnh với $G_{1D}$, lưu vào buffer trung gian.
+    \item \textbf{Quét dọc:} Tích chập từng cột của buffer với $G_{1D}$, thu được kết quả cuối.
+\end{itemize}
+Điều này làm giảm độ phức tạp tính toán xuống còn $O(2k)$. Với $k=5$, số phép nhân trên mỗi pixel giảm từ 25 xuống 10, tăng tốc độ làm mượt lên hơn 2 lần.
+
+\subsubsection{Kết quả thực nghiệm và Đánh giá hiệu năng}
+
+\begin{itemize}
+    \item Thời gian chạy thuật toán Harris cơ bản: \textbf{755.618 ms}.
+    \item Thời gian chạy thuật toán Harris tối ưu: \textbf{176.521 ms}.
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/harris_basic.jpg}
+        \centerline{(a) Chưa tối ưu}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/harris_opt.jpg}
+        \centerline{(b) Đã tối ưu}
+    \end{minipage}
+    \caption{Phát hiện góc với thuật toán Harris cơ bản và sau khi tối ưu}
+\end{figure}
+
+\textbf{Đánh giá:}
+Thời gian thực thi của thuật toán đã giảm mạnh. Tốc độ xử lý của phiên bản tối ưu \textbf{nhanh hơn gấp 4 lần} so với phiên bản cơ bản ban đầu. Kết quả này minh chứng rõ ràng cho sự hiệu quả của các kỹ thuật tối ưu hóa thuật toán đã được phân tích ở trên.
+
+\section{Kết luận}
+
+Đồ án đã hoàn thành các yêu cầu đề ra:
+\begin{itemize}
+    \item Triển khai thành công thuật toán Harris Corner Detection từ đầu bằng thao tác con trỏ cấp thấp trong ngôn ngữ C++.
+    \item Triển khai các phương pháp tối ưu hóa phần cứng, minh chứng được khả năng tư duy tối ưu thuật toán thay vì chỉ gọi hàm thư viện.
+\end{itemize}
