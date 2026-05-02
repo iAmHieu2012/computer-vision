@@ -1,5 +1,6 @@
 # Computer Vision - CSC16004
 
+*Lưu ý*: Để xem chi tiết các bài tập lab, vui lòng xem trong các branch khác.
 Đây là chương trình giao diện dòng lệnh (CLI) được viết bằng **C++17** kết hợp với thư viện **OpenCV 4**. Chương trình thực hiện các thuật toán xử lý ảnh từ cơ bản (lọc nhiễu, dò biên) đến nâng cao (phát hiện góc Harris). Tất cả các thuật toán đều được cài đặt thủ công 100% từ đầu bằng cách thao tác trực tiếp trên bộ nhớ ảnh qua con trỏ, hoàn toàn không sử dụng các hàm xử lý thuật toán có sẵn của OpenCV.
 
 ## Các tính năng chính
